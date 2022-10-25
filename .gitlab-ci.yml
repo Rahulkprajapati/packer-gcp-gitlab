@@ -1,0 +1,47 @@
+image:
+  name: hashicorp/packer:latest
+  entrypoint:
+        [
+        "/usr/bin/env",
+        "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        ]
+
+variables:
+    GOOGLE_APPLICATION_CREDENTIALS: $GCP_SA
+
+stages:
+  - format
+  - validate
+  - build
+
+format_hcl2:
+    stage: format
+    before_script:
+        - export GOOGLE_APPLICATION_CREDENTIALS
+    script:
+        - packer fmt .
+    only:
+     refs:
+        - main
+
+validate_source:
+    stage: validate
+    before_script:
+        - packer init .
+    script:
+        - packer validate .
+    only:
+     refs:
+        - main
+
+build_image:
+    stage: build
+    before_script:
+        - echo "Building GCE MAchine Image"
+        - packer init .
+    script:
+        - packer build .
+    only:
+     refs:
+        - main
+
